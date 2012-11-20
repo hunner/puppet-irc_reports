@@ -4,18 +4,11 @@ require 'json'
 require 'uri'
 require 'net/https'
 
-begin
-  require 'carrier-pigeon'
-rescue LoadError => e
-  Puppet.info "You need the `carrier-pigeon` gem to use the IRC report"
-end
-
 unless Puppet.version >= '2.6.5'
   fail "This report processor requires Puppet version 2.6.5 or later"
 end
 
 Puppet::Reports.register_report(:irc) do
-
   configfile = File.join([File.dirname(Puppet.settings[:config]), "irc.yaml"])
   raise(Puppet::ParseError, "IRC report config file #{configfile} not readable") unless File.exist?(configfile)
   CONFIG = YAML.load_file(configfile)
@@ -45,17 +38,19 @@ Puppet::Reports.register_report(:irc) do
       begin
         timeout(8) do
           Puppet.debug "Sending status for #{self.host} to IRC."
+          uri = URI.parse(CONFIG[:irc_server])
           params  = {
-            :uri     => CONFIG[:irc_server],
+            :server  => CONFIG[:server]
+            :nick    => CONFIG[:nick],
+            :channel => CONFIG[:channel],
+            :ssl     => CONFIG[:irc_ssl] || false,
             :message => message,
-            :ssl     => CONFIG[:irc_ssl],
-            :register_first => CONFIG[:irc_register_first],
-            :join    => true,
           }
-          if CONFIG.has_key?(:irc_password)
-            params[:channel_password] = CONFIG[:irc_password]
+          params[:server_password] = CONFIG[:server_password] if CONFIG.has_key?(:server_password)
+          params[:channel_password] = CONFIG[:channel_password] if CONFIG.has_key?(:channel_password)
+          params[:port] = CONFIG[:port] if CONFIG.has_key?(:port)
           end
-          CarrierPigeon.send(params)
+          IRC.send(params)
         end
       rescue Timeout::Error
          Puppet.notice "Failed to send report to #{CONFIG[:irc_server]} retrying..."
@@ -98,5 +93,26 @@ Puppet::Reports.register_report(:irc) do
         Puppet.err "Timed out while attempting to create a GitHub Gist."
       end
     end
+  end
+end
+
+class IRC
+  def initialize(params)
+    port = params[:port] || (params[:ssl] ? "6697" : "6667")
+    if params[:ssl]
+      @irc = TCPSocket.open(params[:server], port)
+    else
+      context = OpenSSL::SSL::SSLContext.new()
+      @irc = OpenSSL::SSL::SSLSocket.new(TCPSocket.new(params[:server], port), context).connect
+    end
+    @irc.puts "PASS #{params[:server_password]}" if params[:server_password]
+    @irc.puts "USER #{params[:nick]} 0 * :#{params[:nick]}"
+    @irc.puts "NICK #{params[:nick]}"
+    sleep 1 until connection.gets =~ /001/
+    @irc.puts "JOIN #{params[:channel]} #{params[:channel_password]}"
+  end
+  def send(params)
+    IRC.new(params) unless @irc
+    @irc.puts "PRIVMSG #{params[:channel]} :#{params[:message]}"
   end
 end
