@@ -40,7 +40,7 @@ Puppet::Reports.register_report(:irc) do
           Puppet.debug "Sending status for #{self.host} to IRC."
           uri = URI.parse(CONFIG[:irc_server])
           params  = {
-            :server  => CONFIG[:server]
+            :server  => CONFIG[:server],
             :nick    => CONFIG[:nick],
             :channel => CONFIG[:channel],
             :ssl     => CONFIG[:irc_ssl] || false,
@@ -49,7 +49,6 @@ Puppet::Reports.register_report(:irc) do
           params[:server_password] = CONFIG[:server_password] if CONFIG.has_key?(:server_password)
           params[:channel_password] = CONFIG[:channel_password] if CONFIG.has_key?(:channel_password)
           params[:port] = CONFIG[:port] if CONFIG.has_key?(:port)
-          end
           IRC.send(params)
         end
       rescue Timeout::Error
