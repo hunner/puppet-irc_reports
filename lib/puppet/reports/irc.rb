@@ -49,6 +49,7 @@ Puppet::Reports.register_report(:irc) do
           params[:port] = CONFIG[:port] if CONFIG.has_key?(:port)
           irc = IRC.new(params)
           irc.msg(message)
+          irc.quit
         end
       rescue Timeout::Error
          Puppet.notice "Failed to send report to #{CONFIG[:server]} retrying..."
@@ -112,5 +113,8 @@ class IRC
   end
   def msg(message)
     @irc.puts "PRIVMSG #{@params[:channel]} :#{message}"
+  end
+  def quit
+    @irc.puts "QUIT :"
   end
 end
