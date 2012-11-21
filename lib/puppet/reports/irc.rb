@@ -38,12 +38,11 @@ Puppet::Reports.register_report(:irc) do
       begin
         timeout(8) do
           Puppet.debug "Sending status for #{self.host} to IRC."
-          uri = URI.parse(CONFIG[:irc_server])
           params  = {
             :server  => CONFIG[:server],
             :nick    => CONFIG[:nick],
             :channel => CONFIG[:channel],
-            :ssl     => CONFIG[:irc_ssl] || false,
+            :ssl     => CONFIG[:ssl] || false,
             :message => message,
           }
           params[:server_password] = CONFIG[:server_password] if CONFIG.has_key?(:server_password)
@@ -52,12 +51,12 @@ Puppet::Reports.register_report(:irc) do
           IRC.msg(params)
         end
       rescue Timeout::Error
-         Puppet.notice "Failed to send report to #{CONFIG[:irc_server]} retrying..."
+         Puppet.notice "Failed to send report to #{CONFIG[:server]} retrying..."
          max_attempts -= 1
          if max_attempts > 0
            retry
          else
-           Puppet.err "Failed to send report to #{CONFIG[:irc_server]}"
+           Puppet.err "Failed to send report to #{CONFIG[:server]}"
          end
       end
     end
@@ -99,15 +98,15 @@ class IRC
   def initialize(params)
     port = params[:port] || (params[:ssl] ? "6697" : "6667")
     if params[:ssl]
-      @irc = TCPSocket.open(params[:server], port)
-    else
       context = OpenSSL::SSL::SSLContext.new()
       @irc = OpenSSL::SSL::SSLSocket.new(TCPSocket.new(params[:server], port), context).connect
+    else
+      @irc = TCPSocket.open(params[:server], port)
     end
     @irc.puts "PASS #{params[:server_password]}" if params[:server_password]
     @irc.puts "USER #{params[:nick]} 0 * :#{params[:nick]}"
     @irc.puts "NICK #{params[:nick]}"
-    sleep 1 until connection.gets =~ /001/
+    sleep 1 until @irc.gets =~ /001/
     @irc.puts "JOIN #{params[:channel]} #{params[:channel_password]}"
   end
   def msg(params)
