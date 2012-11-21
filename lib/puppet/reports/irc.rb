@@ -1,7 +1,5 @@
 require 'puppet'
 require 'yaml'
-require 'json'
-require 'uri'
 require 'net/https'
 
 unless Puppet.version >= '2.6.5'
