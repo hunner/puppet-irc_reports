@@ -49,7 +49,7 @@ Puppet::Reports.register_report(:irc) do
           params[:server_password] = CONFIG[:server_password] if CONFIG.has_key?(:server_password)
           params[:channel_password] = CONFIG[:channel_password] if CONFIG.has_key?(:channel_password)
           params[:port] = CONFIG[:port] if CONFIG.has_key?(:port)
-          IRC.send(params)
+          IRC.msg(params)
         end
       rescue Timeout::Error
          Puppet.notice "Failed to send report to #{CONFIG[:irc_server]} retrying..."
@@ -110,7 +110,7 @@ class IRC
     sleep 1 until connection.gets =~ /001/
     @irc.puts "JOIN #{params[:channel]} #{params[:channel_password]}"
   end
-  def send(params)
+  def msg(params)
     IRC.new(params) unless @irc
     @irc.puts "PRIVMSG #{params[:channel]} :#{params[:message]}"
   end
