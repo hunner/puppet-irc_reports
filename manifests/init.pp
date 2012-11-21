@@ -1,6 +1,8 @@
-class irc {
+class irc (
+  $nick = "puppetmaster-${::hostname}",
+) {
   file { '/etc/puppetlabs/puppet/irc.yaml':
-    ensure => present,
-    source => 'puppet:///modules/irc/irc.yaml',
+    ensure  => present,
+    content => template('irc/irc.yaml.erb'),
   }
 }
