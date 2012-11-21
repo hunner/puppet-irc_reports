@@ -36,16 +36,7 @@ Puppet::Reports.register_report(:irc) do
       begin
         timeout(8) do
           Puppet.debug "Sending status for #{self.host} to IRC."
-          params  = {
-            :server  => CONFIG[:server],
-            :nick    => CONFIG[:nick],
-            :channel => CONFIG[:channel],
-            :ssl     => CONFIG[:ssl] || false,
-          }
-          params[:server_password] = CONFIG[:server_password] if CONFIG.has_key?(:server_password)
-          params[:channel_password] = CONFIG[:channel_password] if CONFIG.has_key?(:channel_password)
-          params[:port] = CONFIG[:port] if CONFIG.has_key?(:port)
-          irc = IRC.new(params)
+          irc = IRC.new(CONFIG)
           irc.msg(message)
           irc.quit
         end
