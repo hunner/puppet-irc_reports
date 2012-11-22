@@ -1,5 +1,5 @@
-puppet-irc
-==========
+puppet-irc\_reports
+==================
 
 Description
 -----------
@@ -9,55 +9,33 @@ A Puppet report handler for sending notifications of failed runs to IRC.
 Requirements
 ------------
 
-* `carrier-pigeon`
 * `puppet` (version 2.6.5 and later)
 
 Installation & Usage
 --------------------
 
-1.  Install the `carrier-pigeon` gem on your Puppet master
+1. Install `puppet-irc_reports` as a module in your Puppet master's module path.
 
-        $ sudo gem install carrier-pigeon
+1. Include `irc_reports` on your puppet master.
 
-2.  Install puppet-irc as a module in your Puppet master's module
-    path.
+1. Enable pluginsync and reports on your master and clients in `puppet.conf`
 
-3.  Update the `irc_server` variable in the `irc.yaml` file with
-    your IRC connection details. If you wish to enable an SSL
-    connection to your IRC server then set the `irc_ssl` option to
-    `true`. If you need to specify a channel password please specify
-    the `irc_password` option. If you are getting register_first error
-    please specify irc_register_first as true. 
-    If you specify the `github_user` and `github_password` options 
-    the report processor will create a Gist containing the log output 
-    from the run. The Gist will be linked in the IRC notification.
-
-4.  Copy `irc.yaml` to `/etc/puppet`.
-    NOTE: Remove any configurations items you're not setting
-    if you are using the default file.
-
-5.  Enable pluginsync and reports on your master and clients in `puppet.conf`
-
-        [master]
-        report = true
+    [master]
         reports = irc
-        pluginsync = true
-        [agent]
+    [agent]
         report = true
         pluginsync = true
 
-6.  Run the Puppet client and sync the report as a plugin
+1. Run the Puppet client and sync the report as a plugin
 
-Author
-------
+Based on
+--------
 
-James Turnbull <james@lovedthanlost.net>
+puppet-irc by James Turnbull <james@lovedthanlost.net>
 
 License
 -------
 
-    Author:: James Turnbull (<james@lovedthanlost.net>)
-    Copyright:: Copyright (c) 2011 James Turnbull
     License:: Apache License, Version 2.0
 
     Licensed under the Apache License, Version 2.0 (the "License");
